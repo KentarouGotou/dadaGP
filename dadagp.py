@@ -954,7 +954,7 @@ assert convert_to_nearest_supported_time(920*1000) == 5760 ## if duration is too
 
 
 # Takes a GP file, converts to token format
-def guitarpro2tokens(song, artist, verbose=False):
+def guitarpro2tokens(song, artist, instrument, verbose=False):
     # - Map every track in song to an instrument group 
     # - Remove SoundFX tracks
     # - Throw error if any track has an instrument change event in mixTable
@@ -1114,6 +1114,8 @@ def guitarpro2tokens(song, artist, verbose=False):
         # tracks in measures 
         for t, track in enumerate(song.tracks):
             instrument_prefix = get_instrument_token_prefix(track, tracks_by_group)
+            if not instrument_prefix == instrument:
+                break
             measure = track.measures[m]
             # voices in tracks (i guess tracks have 2 voices? i will just combine them into one voice)
             for v, voice in enumerate(measure.voices):
@@ -1702,7 +1704,7 @@ def tokens2guitarpro(all_tokens, verbose=False):
             new_track.name = "Clean Guitar 2"
         elif(instrument=="distorted0"):
             new_track.channel.instrument = 30 # Distortion Guitar
-            new_track.color = gp.Color(r=255, g=70, b=70, a=1)
+            new_track.color = gp.Color(r=255, g=70, b=70)
             new_track.name = "Guitar"
         elif(instrument=="distorted1"):
             new_track.channel.instrument = 30 # Distortion Guitar
@@ -2013,10 +2015,10 @@ def tokens2guitarpro(all_tokens, verbose=False):
 
 
 # guitar pro --> tokens
-def dadagp_encode(input_file, output_file, artist_token):
+def dadagp_encode(input_file, output_file, artist_token, instrument):
     song = gp.parse(input_file)
     # Convert the song to tokens
-    tokens = guitarpro2tokens(song, artist_token, verbose=True)
+    tokens = guitarpro2tokens(song, artist_token, instrument, verbose=False)
     # Write the tokens to text file
     f = open(output_file, "w")
     f.write("\n".join(tokens))
@@ -2067,7 +2069,7 @@ Instrument changes are not supported. Banjos are not supported.
                 artist_token = sys.argv[4]
             except:
                 artist_token = "unknown" # default
-            dadagp_encode(input_file, output_file, artist_token)
+            dadagp_encode(input_file, output_file, artist_token, sys.argv[5])
         else:
             dadagp_decode(input_file, output_file)
         print("done.")
